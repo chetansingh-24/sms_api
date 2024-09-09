@@ -5,21 +5,25 @@ from flask_cors import CORS
 from os import getenv
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 def get_db_connection():
-    connection = psycopg2.connect(
-        dbname=getenv('PGDATABASE'),
-        user=getenv('PGUSER'),
-        password=getenv('PGPASSWORD'),
-        host=getenv('PGHOST'),
-        port=getenv('PGPORT', 5432)
-    )
-    return connection
+    try:
+        connection = psycopg2.connect(
+            dbname=getenv('PGDATABASE'),
+            user=getenv('PGUSER'),
+            password=getenv('PGPASSWORD'),
+            host=getenv('PGHOST'),
+            port=getenv('PGPORT', 5432)
+        )
+        return connection
+    except Exception as e:
+        print(f"Database connection error: {e}")
+        return None
+
 
 def get_sms_info_admin(admin_ph_no):
     connection = get_db_connection()
@@ -139,7 +143,8 @@ def volunteer_sms_info():
         return jsonify({"error": error}), 404
     return jsonify(sms_info)
 
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
 
