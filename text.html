@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload CSV with Admin ID</title>
+</head>
+<body>
+    <h1>Upload CSV File with Admin ID</h1>
+    <form id="upload-form">
+        <input type="file" id="file-input" accept=".csv" required />
+        <input type="text" id="admin-id" placeholder="Enter Admin ID" required />
+        <button type="submit">Upload</button>
+    </form>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('file-input');
+            const adminId = document.getElementById('admin-id').value;
+
+            if (!fileInput.files[0] || !adminId) {
+                alert('Please select a file and provide an Admin ID.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`http://localhost:5000/upload?admin_id=${adminId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('File uploaded and data updated successfully.');
+                } else {
+                    alert('Failed to upload file.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error uploading file.');
+            }
+        });
+    </script>
+</body>
+</html>
