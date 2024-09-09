@@ -5,3 +5,4 @@ flask-cors
 chardet
 openpyxl
 xlrd
+python-dotenv
