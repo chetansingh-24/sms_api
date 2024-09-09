@@ -1,0 +1,5 @@
+pandas
+python-dotenv
+psycopg2
+Flask
+flask-cors
