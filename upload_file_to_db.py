@@ -8,7 +8,7 @@ import chardet
 import os
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Function to establish a database connection
 def get_db_connection():
