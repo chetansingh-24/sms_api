@@ -8,7 +8,7 @@ import chardet
 import os
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Function to establish a database connection
 def get_db_connection():
@@ -28,7 +28,6 @@ def get_db_connection():
 # Route to handle file upload and insertion into DB
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    # Retrieve admin_id from query parameter
     admin_id = request.args.get('admin_id')
 
     # Ensure admin_id is provided
