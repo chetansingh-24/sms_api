@@ -5,6 +5,7 @@ import psycopg2
 from os import getenv
 from flask_cors import CORS
 import chardet
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -99,4 +100,5 @@ def upload_file():
         connection.close()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
