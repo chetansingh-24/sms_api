@@ -94,8 +94,6 @@ def get_sms_info_volunteer(volunteer_ph_no):
     """
     cursor.execute(sender_id_for_volunteer, (volunteer_ph_no,))
     sender_id = cursor.fetchone()
-
-
     volunteers = cursor.fetchall()
     sent = 0
     delivered = 0
