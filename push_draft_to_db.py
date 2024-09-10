@@ -27,7 +27,7 @@ def get_db_connection():
 @app.route('/create_sms_draft', methods=['POST'])
 def create_sms_draft():
     data = request.json
-    required_fields = ['user_id', 'template_id', 'sender_id', 'text']
+    required_fields = ['user_id', 'template_id', 'sender_id', 'text', 'sms_type']
     if not all(field in data for field in required_fields):
         return jsonify({"error": "Missing one or more required fields"}), 400
 
@@ -35,6 +35,7 @@ def create_sms_draft():
     template_id = data['template_id']
     sender_id = data['sender_id']
     text = data['text']
+    sms_type = data['sms_type']
 
     connection = get_db_connection()
     if not connection:
@@ -43,11 +44,11 @@ def create_sms_draft():
     try:
         cursor = connection.cursor()
         insert_query = """
-        INSERT INTO sms_draft (user_id, template_id, sender_id, text, timestamp)
-        VALUES (%s, %s, %s, %s, NOW())
+        INSERT INTO sms_draft (user_id, template_id, sender_id, text, sms_type, timestamp)
+        VALUES (%s, %s, %s, %s,%s, NOW())
         RETURNING id;
         """
-        cursor.execute(insert_query, (user_id, template_id, sender_id, text))
+        cursor.execute(insert_query, (user_id, template_id, sender_id, text, sms_type))
         connection.commit()
 
         new_sms_id = cursor.fetchone()[0]
