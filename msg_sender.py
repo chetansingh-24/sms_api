@@ -4,6 +4,7 @@ import os
 from elasticsearch import Elasticsearch
 from flask_cors import CORS
 from dotenv import load_dotenv
+from datetime import datetime  # Import datetime module
 
 load_dotenv()
 app = Flask(__name__)
@@ -14,6 +15,7 @@ es = Elasticsearch(
     cloud_id=os.getenv("ELASTIC_CLOUD_ID"),
     api_key=os.getenv("ELASTIC_API_KEY")
 )
+
 def send_sms(phone_number, message, sender_id):
     url = "https://www.fast2sms.com/dev/bulkV2"
 
@@ -54,6 +56,8 @@ def send_bulk_sms():
         response = es.search(index=index_name, body=query)
         hits = response['hits']['hits']
 
+        total_messages_sent = 0  # Initialize counter
+
         for hit in hits:
             source = hit['_source']
             phone_number = source.get('phone_number')
@@ -61,8 +65,17 @@ def send_bulk_sms():
             if phone_number:
                 sms_response = send_sms(phone_number, message, sender_id)
                 print(f"Message sent to {phone_number}: {sms_response.text}")
+                total_messages_sent += 1  # Increment the counter
 
-        return jsonify({"status": "success", "message": "Messages sent successfully"}), 200
+        # Get the current datetime
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        return jsonify({
+            "status": "success",
+            "message": "Messages sent successfully",
+            "total_messages_sent": total_messages_sent,
+            "datetime": current_time  # Add datetime to the response
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

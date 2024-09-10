@@ -29,12 +29,11 @@ def get_sms_draft():
     if not user_id or not user_id.isdigit():
         return jsonify({'error': 'Invalid user_id'}), 400
 
-    user_id = int(user_id)  # Convert to integer
+    user_id = int(user_id)
 
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    # Query for user_id=1
     cursor.execute("SELECT * FROM sms_draft WHERE user_id = 1")
     user1_data = cursor.fetchall()
 
@@ -44,7 +43,7 @@ def get_sms_draft():
     columns = [desc[0] for desc in cursor.description]
     user1_response = [dict(zip(columns, row)) for row in user1_data]
 
-    combined_response = user1_response  # Start with user1_response
+    combined_response = user1_response
 
     if user_id != 1:
         cursor.execute("SELECT * FROM sms_draft WHERE user_id = %s", (user_id,))
@@ -53,12 +52,10 @@ def get_sms_draft():
         if user_admin_data:
             user_admin_response = [dict(zip(columns, row)) for row in user_admin_data]
 
-            # Combine both responses into a single list
             combined_response = user1_response + user_admin_response
 
     cursor.close()
     connection.close()
-
     return jsonify(combined_response), 200
 
 if __name__ == '__main__':
