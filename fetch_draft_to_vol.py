@@ -1,84 +1,62 @@
-import os
+from flask import Flask, request, jsonify
 import psycopg2
-from flask import Flask, jsonify, request
-from flask_cors import CORS
 from os import getenv
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 def get_db_connection():
-    try:
-        connection = psycopg2.connect(
-            dbname=getenv('PGDATABASE'),
-            user=getenv('PGUSER'),
-            password=getenv('PGPASSWORD'),
-            host=getenv('PGHOST'),
-            port=getenv('PGPORT', 5432)
-        )
-        return connection
-    except Exception as e:
-        print(f"Database connection error: {e}")
-        return None
+    connection = psycopg2.connect(
+        dbname=getenv('PGDATABASE'),
+        user=getenv('PGUSER'),
+        password=getenv('PGPASSWORD'),
+        host=getenv('PGHOST'),
+        port=getenv('PGPORT', 5432)
+    )
+    return connection
 
-def get_sms_info(volunteer_ph_no):
+@app.route('/get_sms_draft', methods=['GET'])
+def get_sms_draft():
+    user_id = request.args.get('user_id')  # Get user_id from query params
+
+    # Validate that user_id is provided and is an integer
+    if not user_id or not user_id.isdigit():
+        return jsonify({'error': 'Invalid user_id'}), 400
+
+    user_id = int(user_id)  # Convert to integer
+
     connection = get_db_connection()
-    if not connection:
-        return None, "Failed to connect to the database"
+    cursor = connection.cursor()
 
-    try:
-        cursor = connection.cursor()
-        sender_id_for_volunteer = """
-        SELECT admin_id
-        FROM admin_volunteer_map
-        WHERE volunteer_phone_number = %s
-        """
-        cursor.execute(sender_id_for_volunteer, (volunteer_ph_no,))
-        admin_id = cursor.fetchone()
+    # Query for user_id=1
+    cursor.execute("SELECT * FROM sms_draft WHERE user_id = 1")
+    user1_data = cursor.fetchall()
 
-        if not admin_id:
-            return None, "Admin ID not found for the given volunteer phone number"
+    if not user1_data:
+        return jsonify({'error': 'No drafts found for user_id 1'}), 404
 
-        sms_query = """
-        SELECT sms_text, draft_time
-        FROM sms_draft
-        WHERE admin_id = %s
-        """
-        cursor.execute(sms_query, (admin_id,))
-        sms_drafts = cursor.fetchall()
+    columns = [desc[0] for desc in cursor.description]
+    user1_response = [dict(zip(columns, row)) for row in user1_data]
 
-        sms_list = []
-        for sms in sms_drafts:
-            sms_list.append({
-                "message": sms[0],
-                "draft_time": sms[1].strftime("%d-%m-%Y %H:%M:%S")
-            })
+    combined_response = user1_response  # Start with user1_response
 
-        cursor.close()
-        connection.close()
+    if user_id != 1:
+        cursor.execute("SELECT * FROM sms_draft WHERE user_id = %s", (user_id,))
+        user_admin_data = cursor.fetchall()
 
-        return {
-            "sender_id": sender_id,
-            "sms_drafts": sms_list
-        }, None
+        if user_admin_data:
+            user_admin_response = [dict(zip(columns, row)) for row in user_admin_data]
 
-    except Exception as e:
-        print(f"Error fetching SMS info: {e}")
-        return None, "Error fetching SMS info"
+            # Combine both responses into a single list
+            combined_response = user1_response + user_admin_response
 
-@app.route('/get_sms', methods=['GET'])
-def volunteer_sms_info():
-    volunteer_ph_no = request.args.get('phone_number')
-    if not volunteer_ph_no:
-        return jsonify({"error": "Volunteer phone number is required"}), 400
-    sms_info, error = get_sms_info(volunteer_ph_no)
-    if error:
-        return jsonify({"error": error}), 404
-    return jsonify(sms_info)
+    cursor.close()
+    connection.close()
+
+    return jsonify(combined_response), 200
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
