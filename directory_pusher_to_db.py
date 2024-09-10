@@ -9,7 +9,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 es = Elasticsearch(
     cloud_id=os.getenv("ELASTIC_CLOUD_ID"),
@@ -101,6 +101,16 @@ def fetch_all():
         return jsonify({"status": "success", "data": results}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/delete', methods=['DELETE'])
+def delete_data():
+    try:
+        # Delete the index
+        es.indices.delete(index=INDEX_NAME, ignore=[400, 404])
+        return jsonify({"status": "success", "message": f"Index '{INDEX_NAME}' deleted successfully."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
