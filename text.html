@@ -61,7 +61,7 @@
     const formData = new FormData();
     formData.append('file', file);
 
-    fetch('http://localhost:5000/upload', {
+    fetch('https://directory-pusher-to-es.onrender.com/upload', {
         method: 'POST',
         body: formData
     })
@@ -75,7 +75,7 @@
 });
 
 document.getElementById('fetchButton').addEventListener('click', function () {
-    fetch('http://localhost:5000/fetch', {
+    fetch('https://directory-pusher-to-es.onrender.com/fetch', {
         method: 'GET'
     })
     .then(response => response.json())

@@ -1,80 +1,48 @@
-# # import requests
-# # import json
-# #
-# # url = "https://api.interakt.ai/v1/public/create-campaign/"
-# #
-# # payload = json.dumps({
-# #   "campaign_name": "Testing campaignnn",
-# #   "campaign_type": "PublicAPI",
-# #   "template_name": "message",
-# #   "language_code": "en"
-# # })
-# # headers = {
-# #   'Authorization': 'Basic SUYyaW5TY3RZZWtJUUxodGJpSk04Q2h3Q1BVWEpOX09DbFBOMXNEVkNIRTo=',
-# #   'Content-Type': 'application/json'
-# # }
-# #
-# # response = requests.request("POST", url, headers=headers, data=payload)
-# #
-# # print(response.text)
-#
-#
-# import requests
-# import json
-#
-# url = "https://push-draft-to-db-bxoz.onrender.com/create_sms_draft"
-#
-# payload = json.dumps({
-#   "user_id": 1,
-#   "template_id": 2,
-#   "sender_id": "admindddede5u",
-#   "text": "This is a sample SMS draft for the user.",
-#   "sms_type": "SMS"
-# })
-#
-# headers = {
-#   "Content-Type": "application/json",
-#   "Access-Control-Allow-Origin": "*",
-#   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-#   "Access-Control-Allow-Headers": "Content-Type, Authorization"
-# }
-#
-#
-# response = requests.post(url, headers=headers, data=payload)
-#
-# print(response.text)
-#
-
 import requests
 import pandas as pd
+from elasticsearch import Elasticsearch
 
+# Initialize Elasticsearch client
+es = Elasticsearch([{'host': 'localhost', 'port': 9200}])  # Update with your ES instance details
 
-# Function to send SMS using Fast2SMS
 def send_sms(phone_number, message):
-  url = "https://www.fast2sms.com/dev/bulkV2"
+    url = "https://www.fast2sms.com/dev/bulkV2"
 
-  querystring = {
-    "authorization": "hJsT2Y7kmsrCJDOzdm5UeobfKLlY2EiQ0gbDrvOBFg4lUVrlBTvcRxpED3Zf",
-    "sender_id": "POLYTS",
-    "message":173035,
-    "variables_values": message,
-    "route": "dlt",
-    "numbers": phone_number
-  }
+    querystring = {
+        "authorization": "hJsT2Y7kmsrCJDOzdm5UeobfKLlY2EiQ0gbDrvOBFg4lUVrlBTvcRxpED3Zf",
+        "sender_id": "POLYTS",
+        "message": message,  # Use the actual message here
+        "route": "dlt",
+        "numbers": phone_number
+    }
 
-  headers = {
-    'cache-control': "no-cache"
-  }
+    headers = {
+        'cache-control': "no-cache"
+    }
 
-  response = requests.get(url, headers=headers, params=querystring)
-  return response
+    response = requests.get(url, headers=headers, params=querystring)
+    return response
 
-# Read CSV file
-csv_file_path = '/home/chetansingh/Downloads/admin_volunteer_map.csv'
-df = pd.read_csv(csv_file_path)
-for index, row in df.iterrows():
-    phone_number = row['Phone']
-    name = row['Name']
-    response = send_sms(phone_number, name)
-    print(f"Message sent to {phone_number}: {response.text}")
+# Fetch data from Elasticsearch
+index_name = 'your_index_name'  # Replace with your index name
+query = {
+    "query": {
+        "match_all": {}
+    }
+}
+
+response = es.search(index=index_name, body=query)
+hits = response['hits']['hits']
+
+# Process each document
+for hit in hits:
+    source = hit['_source']
+    phone_number = source.get('phone_number')
+    name = source.get('name')
+
+    if phone_number and name:
+        response = send_sms(phone_number, name)
+        print(f"Message sent to {phone_number}: {response.text}")
+    else:
+        print("Missing phone number or name in document:", hit)
 
