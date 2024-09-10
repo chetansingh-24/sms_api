@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import psycopg2
+import os
 from os import getenv
 from dotenv import load_dotenv
 from flask_cors import CORS
