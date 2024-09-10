@@ -1,5 +1,5 @@
-from flask import Flask, request, jsonify
 import requests
+from flask import Flask, request, jsonify
 import os
 from elasticsearch import Elasticsearch
 from flask_cors import CORS

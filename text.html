@@ -54,61 +54,79 @@
 
     <script>
         document.getElementById('uploadForm').addEventListener('submit', function (event) {
-    event.preventDefault();
+            event.preventDefault();
 
-    const fileInput = document.getElementById('csvFile');
-    const file = fileInput.files[0];
-    const formData = new FormData();
-    formData.append('file', file);
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
 
-    fetch('https://directory-pusher-to-es.onrender.com/upload', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        alert(data.message || 'File uploaded successfully');
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-});
+            fetch('https://directory-pusher-to-es.onrender.com/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || 'File uploaded successfully');
+                if (data.status === 'success') {
+                    // Fetch data to display
+                    fetchData();
 
-document.getElementById('fetchButton').addEventListener('click', function () {
-    fetch('https://directory-pusher-to-es.onrender.com/fetch', {
-        method: 'GET'
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log(data);  // Log the entire response to verify the structure
-        if (data.status === 'success') {
-            const tableBody = document.querySelector('#resultsTable tbody');
-            tableBody.innerHTML = ''; // Clear previous results
-
-            data.data.forEach(item => {
-                const row = document.createElement('tr');
-
-                // Create and append Name cell
-                const nameCell = document.createElement('td');
-                nameCell.textContent = item.name || 'N/A'; // Default to 'N/A' if name is undefined
-                row.appendChild(nameCell);
-
-                // Create and append Phone Number cell
-                const phoneCell = document.createElement('td');
-                phoneCell.textContent = item.phone_number || 'N/A'; // Default to 'N/A' if phone_number is undefined
-                row.appendChild(phoneCell);
-
-                tableBody.appendChild(row);
+                    // Set a timeout to delete the file (simulate by just clearing the table)
+                    setTimeout(() => {
+                        clearTable();
+                        alert('File data cleared.');
+                    }, 5000); // 5 seconds
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
             });
-        } else {
-            alert(data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-});
+        });
 
+        document.getElementById('fetchButton').addEventListener('click', function () {
+            fetchData();
+        });
+
+        function fetchData() {
+            fetch('https://directory-pusher-to-es.onrender.com/fetch', {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);  // Log the entire response to verify the structure
+                if (data.status === 'success') {
+                    const tableBody = document.querySelector('#resultsTable tbody');
+                    tableBody.innerHTML = ''; // Clear previous results
+
+                    data.data.forEach(item => {
+                        const row = document.createElement('tr');
+
+                        // Create and append Name cell
+                        const nameCell = document.createElement('td');
+                        nameCell.textContent = item.name || 'N/A'; // Default to 'N/A' if name is undefined
+                        row.appendChild(nameCell);
+
+                        // Create and append Phone Number cell
+                        const phoneCell = document.createElement('td');
+                        phoneCell.textContent = item.phone_number || 'N/A'; // Default to 'N/A' if phone_number is undefined
+                        row.appendChild(phoneCell);
+
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function clearTable() {
+            const tableBody = document.querySelector('#resultsTable tbody');
+            tableBody.innerHTML = ''; // Clear the table body
+        }
     </script>
 </body>
 </html>
