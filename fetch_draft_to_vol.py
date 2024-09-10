@@ -2,11 +2,13 @@ from flask import Flask, request, jsonify
 import psycopg2
 from os import getenv
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 def get_db_connection():
     connection = psycopg2.connect(
@@ -59,4 +61,6 @@ def get_sms_draft():
     return jsonify(combined_response), 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
+
