@@ -16,14 +16,15 @@ es = Elasticsearch(
     api_key=os.getenv("ELASTIC_API_KEY")
 )
 
-def send_sms(phone_number, message, sender_id):
+def send_sms(phone_number, message_id, sender_id, name):
     url = "https://www.fast2sms.com/dev/bulkV2"
 
     querystring = {
         "authorization": "hJsT2Y7kmsrCJDOzdm5UeobfKLlY2EiQ0gbDrvOBFg4lUVrlBTvcRxpED3Zf",
         "sender_id": sender_id,
-        "message": message,
+        "message": message_id,
         "route": "dlt",
+        "variables_values": name,
         "numbers": phone_number
     }
 
@@ -44,7 +45,6 @@ def send_bulk_sms():
     if not message or not sender_id:
         return jsonify({"error": "Missing message or sender_id"}), 400
 
-    # Fetch data from Elasticsearch
     index_name = 'phone_name_map_messaging_piece'
     query = {
         "query": {
@@ -56,14 +56,15 @@ def send_bulk_sms():
         response = es.search(index=index_name, body=query)
         hits = response['hits']['hits']
 
-        total_messages_sent = 0  # Initialize counter
+        total_messages_sent = 0
 
         for hit in hits:
             source = hit['_source']
             phone_number = source.get('phone_number')
+            name = source.get('name')
 
             if phone_number:
-                sms_response = send_sms(phone_number, message, sender_id)
+                sms_response = send_sms(phone_number, message, sender_id, name)
                 print(f"Message sent to {phone_number}: {sms_response.text}")
                 total_messages_sent += 1  # Increment the counter
 
