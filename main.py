@@ -33,7 +33,7 @@ def get_db_connection():
   )
   return connection
 
-file_path = "/home/chetansingh/Downloads/DeliveryReport__07-09-2024_03-36-09-8373.xlsx"
+file_path = "/home/chetansingh/Downloads/DeliveryReport__11-09-2024_01-16-09-8385.xlsx"
 def push_to_db(filepath):
   df = pd.read_excel(filepath)
 

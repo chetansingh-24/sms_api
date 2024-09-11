@@ -119,7 +119,6 @@ def get_sms_info_volunteer(volunteer_ph_no):
         "messages_delivered": delivered
     }, None
 
-
 @app.route('/admin/sms_info', methods=['GET'])
 def admin_sms_info():
     admin_ph_no = request.args.get('phone_number')
