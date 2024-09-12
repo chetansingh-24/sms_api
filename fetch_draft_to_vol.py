@@ -58,6 +58,38 @@ def get_sms_draft():
     connection.close()
     return jsonify(combined_response), 200
 
+@app.route('/delete_sms_draft', methods=['DELETE'])
+def delete_sms_draft():
+    draft_ids = request.json.get('draft_ids')  # Get draft_ids from request body
+
+    # Validate that draft_ids is provided and is a list of integers
+    if not draft_ids or not all(isinstance(d, int) for d in draft_ids):
+        return jsonify({'error': 'Invalid draft_ids. It should be a list of integers.'}), 400
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute("SELECT id FROM sms_draft WHERE id = ANY(%s)", (draft_ids,))
+        existing_drafts = cursor.fetchall()
+        existing_draft_ids = {row[0] for row in existing_drafts}
+
+        if not existing_draft_ids:
+            return jsonify({'error': 'No drafts found for the provided draft_ids'}), 404
+
+        cursor.execute("DELETE FROM sms_draft WHERE id = ANY(%s)", (draft_ids,))
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({'message': f'Drafts with IDs {list(existing_draft_ids)} deleted successfully'}), 200
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({'error': 'An error occurred while deleting the drafts.'}), 500
+
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)

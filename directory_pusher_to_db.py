@@ -83,7 +83,6 @@ def upload_csv():
                 for _, row in df.iterrows()
             ]
             helpers.bulk(es, actions)
-
             return jsonify({"status": "success", "message": "Data uploaded successfully"}), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
