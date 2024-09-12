@@ -70,7 +70,7 @@ def send_bulk_sms():
         for hit in hits:
             source = hit['_source']
             phone_number = source.get('phone_number')
-            name = source.get('name')  # Use this as header value
+            name = source.get('name')
 
             if phone_number:
                 header_values = [name]

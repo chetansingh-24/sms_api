@@ -9,7 +9,7 @@
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        #results {
+        #results, #errors {
             margin-top: 20px;
         }
         table {
@@ -24,6 +24,15 @@
         th {
             background-color: #f4f4f4;
         }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+        .error-list {
+            color: red;
+            list-style-type: none;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
@@ -34,6 +43,11 @@
         <input type="file" id="csvFile" accept=".csv" required>
         <button type="submit">Upload CSV</button>
     </form>
+
+    <div id="errors">
+        <h3>Error Messages</h3>
+        <ul id="errorList" class="error-list"></ul>
+    </div>
 
     <h2>Fetch Data</h2>
     <button id="fetchButton">Fetch All Data</button>
@@ -61,22 +75,18 @@
             const formData = new FormData();
             formData.append('file', file);
 
-            fetch('https://directory-pusher-to-es.onrender.com/upload', {
+            fetch('http://127.0.0.1:5000/upload', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message || 'File uploaded successfully');
+                clearErrors();  // Clear previous error messages
                 if (data.status === 'success') {
-                    // Fetch data to display
+                    alert(data.message || 'File uploaded successfully');
                     fetchData();
-
-                    // Set a timeout to delete the file (simulate by just clearing the table)
-                    setTimeout(() => {
-                        clearTable();
-                        alert('File data cleared.');
-                    }, 5000); // 5 seconds
+                } else if (data.status === 'error') {
+                    displayErrors(data.errors);
                 }
             })
             .catch(error => {
@@ -94,7 +104,6 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log(data);  // Log the entire response to verify the structure
                 if (data.status === 'success') {
                     const tableBody = document.querySelector('#resultsTable tbody');
                     tableBody.innerHTML = ''; // Clear previous results
@@ -123,9 +132,18 @@
             });
         }
 
-        function clearTable() {
-            const tableBody = document.querySelector('#resultsTable tbody');
-            tableBody.innerHTML = ''; // Clear the table body
+        function displayErrors(errors) {
+            const errorList = document.getElementById('errorList');
+            errors.forEach(error => {
+                const errorItem = document.createElement('li');
+                errorItem.textContent = error;
+                errorList.appendChild(errorItem);
+            });
+        }
+
+        function clearErrors() {
+            const errorList = document.getElementById('errorList');
+            errorList.innerHTML = ''; // Clear all previous error messages
         }
     </script>
 </body>

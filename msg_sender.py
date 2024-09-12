@@ -27,14 +27,11 @@ def send_sms(phone_number, message_id, sender_id, name):
         "variables_values": name,
         "numbers": phone_number
     }
-
     headers = {
         'cache-control': "no-cache"
     }
-
     response = requests.get(url, headers=headers, params=querystring)
     return response
-
 
 @app.route('/send_bulk_sms', methods=['POST'])
 def send_bulk_sms():

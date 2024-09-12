@@ -4,6 +4,7 @@ from elasticsearch import Elasticsearch, helpers
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
+import re
 
 load_dotenv()
 
@@ -33,6 +34,8 @@ mapping = {
     }
 }
 
+def validate_phone_number(phone):
+    return bool(re.fullmatch(r'\d{10}', str(phone)))
 @app.route('/create_index', methods=['POST'])
 def create_index():
     if not es.indices.exists(INDEX_NAME):
@@ -62,6 +65,16 @@ def upload_csv():
 
             df = df[required_columns]
             df.columns = ['phone_number', 'name']
+            errors = []
+            for index, row in df.iterrows():
+                phone_number = row['phone_number']
+
+                if not validate_phone_number(phone_number):
+                    errors.append(
+                        f"Error on line {index + 2}: Invalid phone number '{phone_number}' (must be 10 digits)")
+
+            if errors:
+                return jsonify({"status": "error", "errors": errors}), 400
             actions = [
                 {
                     "_index": INDEX_NAME,
@@ -69,8 +82,6 @@ def upload_csv():
                 }
                 for _, row in df.iterrows()
             ]
-
-            # Bulk index the data
             helpers.bulk(es, actions)
 
             return jsonify({"status": "success", "message": "Data uploaded successfully"}), 200
@@ -82,7 +93,6 @@ def upload_csv():
 @app.route('/fetch', methods=['GET'])
 def fetch_all():
     try:
-        # Search the Elasticsearch index for all documents
         query = {
             "query": {
                 "match_all": {}
@@ -90,7 +100,6 @@ def fetch_all():
         }
         response = es.search(index=INDEX_NAME, body=query, size=10000)  # Adjust size as needed
 
-        # Extract relevant information from the search results
         results = [
             {
                 "name": hit["_source"].get("name"),
