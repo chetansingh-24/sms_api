@@ -83,7 +83,7 @@ def delete_sms_draft():
         cursor.close()
         connection.close()
 
-        return jsonify({'message': f'Drafts with IDs {list(existing_draft_ids)} deleted successfully'}), 200
+        return jsonify({'message': f'Deleted successfully'}), 200
 
     except Exception as e:
         print(f"Error occurred: {e}")
